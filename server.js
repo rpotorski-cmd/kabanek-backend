@@ -222,7 +222,7 @@ app.post('/api/sales', async (req, res) => {
     const { client_id, date, quantity, avg_weight, farmer_price, factory_price, trade_premium, notes } = req.body;
     
     // Walidacja
-    if (!client_id || !date || !quantity || !avg_weight || farmer_price === undefined || factory_price === undefined) {
+    if (!client_id || !date || quantity === undefined || quantity === null || avg_weight === undefined || avg_weight === null || farmer_price === undefined || farmer_price === null || factory_price === undefined || factory_price === null) {
       return res.status(400).json({ 
         success: false, 
         error: 'Wymagane pola: client_id, date, quantity, avg_weight, farmer_price, factory_price' 
@@ -274,7 +274,7 @@ app.put('/api/sales/:id', async (req, res) => {
   try {
     const { client_id, date, quantity, avg_weight, farmer_price, factory_price, trade_premium, notes } = req.body;
     
-    if (!client_id || !date || !quantity || !avg_weight || farmer_price === undefined || factory_price === undefined) {
+    if (!client_id || !date || quantity === undefined || quantity === null || avg_weight === undefined || avg_weight === null || farmer_price === undefined || farmer_price === null || factory_price === undefined || factory_price === null) {
       return res.status(400).json({ 
         success: false, 
         error: 'Wymagane pola: client_id, date, quantity, avg_weight, farmer_price, factory_price' 
