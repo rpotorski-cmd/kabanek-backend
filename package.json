@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Backend API dla systemu KABANEK - Planer hodowli trzody chlewnej",
   "main": "server.js",
-  "type": "module",
   "scripts": {
     "start": "node start.js",
     "start:server": "node server.js",
