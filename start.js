@@ -1,39 +1,25 @@
-#!/usr/bin/env node
+const { Pool } = require('pg');
+const { execSync } = require('child_process');
 
-/**
- * Railway Start Script (PostgreSQL)
- * Automatycznie inicjalizuje bazę danych jeśli tabele nie istnieją
- */
-
-import pg from 'pg';
-import { execSync } from 'child_process';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const { Pool } = pg;
-
-console.log('🚂 Railway Start Script (PostgreSQL)');
+console.log('🚂 Railway Start - KABANEK Backend');
 console.log('='.repeat(50));
 
-async function checkDatabase() {
+async function start() {
   if (!process.env.DATABASE_URL) {
-    console.error('❌ DATABASE_URL nie jest ustawione!');
-    console.log('💡 Na Railway dodaj bazę danych PostgreSQL');
+    console.error('❌ DATABASE_URL missing!');
     process.exit(1);
   }
 
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: { rejectUnauthorized: false }
   });
 
   try {
-    console.log('🔍 Sprawdzanie połączenia z PostgreSQL...');
+    console.log('🔍 Checking PostgreSQL...');
     await pool.query('SELECT 1');
-    console.log('✅ Połączenie z PostgreSQL OK');
+    console.log('✅ PostgreSQL OK');
 
-    // Sprawdź czy tabele istnieją
     const result = await pool.query(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -41,45 +27,23 @@ async function checkDatabase() {
       );
     `);
 
-    const tablesExist = result.rows[0].exists;
-
-    if (!tablesExist) {
-      console.log('📊 Tabele nie istnieją - inicjalizacja bazy danych...');
-      try {
-        execSync('node initDb.js', { stdio: 'inherit' });
-        console.log('✅ Baza danych zainicjalizowana!');
-      } catch (error) {
-        console.error('❌ Błąd inicjalizacji bazy danych:', error.message);
-        await pool.end();
-        process.exit(1);
-      }
+    if (!result.rows[0].exists) {
+      console.log('📊 Initializing database...');
+      execSync('node initDb.js', { stdio: 'inherit' });
+      console.log('✅ Database initialized!');
     } else {
-      console.log('✅ Tabele już istnieją w bazie danych');
+      console.log('✅ Tables exist');
     }
 
     await pool.end();
+    
+    console.log('='.repeat(50));
+    console.log('🚀 Starting server...');
+    execSync('node server.js', { stdio: 'inherit' });
   } catch (error) {
-    console.error('❌ Błąd połączenia z bazą danych:', error.message);
-    await pool.end();
+    console.error('❌ Error:', error.message);
     process.exit(1);
   }
 }
 
-// Sprawdź bazę danych, potem uruchom serwer
-checkDatabase()
-  .then(() => {
-    console.log('='.repeat(50));
-    console.log('🚀 Uruchamianie serwera...');
-    console.log('');
-
-    try {
-      execSync('node server.js', { stdio: 'inherit' });
-    } catch (error) {
-      console.error('❌ Błąd uruchomienia serwera:', error.message);
-      process.exit(1);
-    }
-  })
-  .catch((error) => {
-    console.error('❌ Błąd startu:', error);
-    process.exit(1);
-  });
+start();
